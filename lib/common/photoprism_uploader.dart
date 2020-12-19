@@ -137,7 +137,7 @@ class PhotoprismUploader {
         final int status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await PhotoManager.loadMomentsTime(context, forceReload: true);
+          await PhotoManager.loadPhotoCount(context, forceReload: true);
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage('Uploading and importing successful.');

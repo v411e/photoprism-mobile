@@ -25,6 +25,7 @@ class PhotoprismModel extends ChangeNotifier {
   Config config;
   List<MomentsTime> momentsTime;
   Map<int, Photo> photos;
+  int photosCount;
   Map<int, Album> albums;
   Map<int, Photo> videos = <int, Photo>{};
   Lock photoLoadingLock = Lock();
@@ -133,6 +134,11 @@ class PhotoprismModel extends ChangeNotifier {
 
   void setPhotos(Map<int, Photo> newValue) {
     photos = newValue;
+    notifyListeners();
+  }
+
+  void setPhotosCount(int newValue) {
+    photosCount = newValue;
     notifyListeners();
   }
 

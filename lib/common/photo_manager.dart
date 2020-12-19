@@ -60,7 +60,7 @@ class PhotoManager {
     final int status = await Api.archivePhotos(photoUUIDs, model);
     if (status == 0) {
       model.gridController.clear();
-      await PhotoManager.loadMomentsTime(context, forceReload: true);
+      await PhotoManager.loadPhotoCount(context, forceReload: true);
       model.photoprismLoadingScreen.hideLoadingScreen();
     } else {
       model.photoprismLoadingScreen.hideLoadingScreen();
@@ -76,6 +76,14 @@ class PhotoManager {
     model.setMomentsTime(moments);
   }
 
+  static Future<void> saveAndSetPhotoCount(
+      BuildContext context, int photoCount) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
+        'photoCount', photoCount);
+    model.setPhotosCount(photoCount);
+  }
+
   static int getPhotosCount(
       BuildContext context, int albumId, bool videosPage) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -85,12 +93,8 @@ class PhotoManager {
       }
       return 0;
     }
-    if (albumId == null &&
-        model.momentsTime != null &&
-        model.momentsTime.isNotEmpty) {
-      return model.momentsTime
-          .map((MomentsTime v) => v.count)
-          .reduce((int v, int e) => v + e);
+    if (albumId == null && model.photosCount != null) {
+      return model.photosCount;
     }
     if (model.albums != null && model.albums[albumId] != null) {
       return model.albums[albumId].imageCount;
@@ -125,6 +129,20 @@ class PhotoManager {
       }
       final List<MomentsTime> momentsTime = await Api.loadMomentsTime(context);
       await saveAndSetMomentsTime(context, momentsTime);
+    });
+    return;
+  }
+
+  static Future<void> loadPhotoCount(BuildContext context,
+      {bool forceReload = false}) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    await model.photoLoadingLock.synchronized(() async {
+      if (model.photosCount != null && !forceReload) {
+        return;
+      }
+      final int photoCount = await Api.loadPhotosCount(context, null);
+      await saveAndSetPhotoCount(context, photoCount);
     });
     if (model.selectedPageIndex == PageIndex.Photos) {
       print('reload photos');

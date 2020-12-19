@@ -260,7 +260,31 @@ class Api {
 
   static Future<Map<int, Photo>> loadPhotos(
       BuildContext context, int albumId, int offset,
+      {bool videosPage = false, bool getCount = false}) async {
+    final http.Response response = await photoSearchApi(
+        context, albumId, offset,
+        videosPage: videosPage, getCount: false);
+    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
+    final Map<int, Photo> photos = Map<int, Photo>.fromIterables(
+        List<int>.generate(parsed.length, (int i) => i + offset),
+        parsed
+            .map<Photo>(
+                (dynamic json) => Photo.fromJson(json as Map<String, dynamic>))
+            .toList());
+    return photos;
+  }
+
+  static Future<int> loadPhotosCount(BuildContext context, int albumId,
       {bool videosPage = false}) async {
+    final http.Response response = await photoSearchApi(context, albumId, 0,
+        videosPage: videosPage, getCount: true);
+    final int count = int.tryParse(response.body);
+    return count;
+  }
+
+  static Future<http.Response> photoSearchApi(
+      BuildContext context, int albumId, int offset,
+      {bool videosPage = false, bool getCount = false}) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     String albumIdUrlParam = '';
@@ -271,26 +295,25 @@ class Api {
     }
 
     final String type = videosPage ? '&video=true' : '&photo=true';
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/photos' +
-                '?count=100' +
-                '&merged=true' +
-                type +
-                '&offset=' +
-                offset.toString() +
-                '&album=' +
-                albumIdUrlParam,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-    return Map<int, Photo>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<Photo>(
-                (dynamic json) => Photo.fromJson(json as Map<String, dynamic>))
-            .toList());
+
+    String url = model.photoprismUrl +
+        '/api/v1/photos' +
+        '?count=100' +
+        '&merged=true' +
+        type +
+        '&offset=' +
+        offset.toString() +
+        '&album=' +
+        albumIdUrlParam;
+
+    if (getCount) {
+      url += '&format=count';
+    }
+
+    final http.Response response = await httpAuth(model,
+            () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
+        as http.Response;
+    return response;
   }
 
   static Future<Map<int, Album>> loadAlbums(

@@ -315,6 +315,7 @@ class SettingsPage extends StatelessWidget {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.remove('momentsTime');
     sp.remove('photos');
+    sp.remove('photoCount');
     sp.remove('videos');
     sp.remove('albums');
     if (model.albums != null) {
@@ -325,6 +326,7 @@ class SettingsPage extends StatelessWidget {
     model.photos = null;
     model.videos = <int, Photo>{};
     model.momentsTime = null;
+    model.photosCount = null;
     model.albums = null;
     model.config = null;
     await DefaultCacheManager().emptyCache();

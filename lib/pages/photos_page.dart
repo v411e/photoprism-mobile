@@ -93,6 +93,11 @@ class PhotosPage extends StatelessWidget {
 
   Text getMonthFromOffset(
       BuildContext context, ScrollController scrollController) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (model.momentsTime == null) {
+      PhotoManager.loadMomentsTime(context);
+      return const Text('');
+    }
     for (final MomentsTime m
         in PhotoManager.getCummulativeMonthCount(context)) {
       if (m.count >= PhotoManager.getPhotoIndexInScrollView(context, albumId)) {
@@ -204,8 +209,8 @@ class PhotosPage extends StatelessWidget {
         Api.loadConfig(model);
         return const Text('', key: ValueKey<String>('videosGridView'));
       }
-      if (albumId == null && model.momentsTime == null) {
-        PhotoManager.loadMomentsTime(context);
+      if (albumId == null && model.photosCount == null) {
+        PhotoManager.loadPhotoCount(context);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
 
@@ -263,7 +268,7 @@ class PhotosPage extends StatelessWidget {
         PhotoManager.saveAndSetPhotos(context, <int, Photo>{}, null, true);
         await Api.loadConfig(model);
       } else {
-        return await PhotoManager.loadMomentsTime(context, forceReload: true);
+        return await PhotoManager.loadPhotoCount(context, forceReload: true);
       }
     });
   }
